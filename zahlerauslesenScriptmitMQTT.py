@@ -2,10 +2,11 @@
 
 import time
 import minimalmodbus
-import time
 import paho.mqtt.client as mqtt
+from datetime import datetime
 
 durchlaufzaehler = 0
+fehler = "nein"
 
 # Konfiguration MQTT
 broker_address = "192.168.1.167"
@@ -30,10 +31,12 @@ Wallbox.serial.stopbits = 1
 Wallbox.serial.timeout = 1
 Wallbox.mode = minimalmodbus.MODE_RTU
 
+
+
 # Auslesen der Zähler (HV=Hausverbrauch)
 
 while(1):
-    fehler = "nein"
+
 
     try:
         HV_A_Phase_Spannung = round(Hausverbrauch.read_float(0, functioncode=4, number_of_registers=2), 2)
@@ -62,6 +65,8 @@ while(1):
 
         HV_Gesamte_verbrauchte_Wirkleistung = round(Hausverbrauch.read_float(256, functioncode=4, number_of_registers=2), 2)
         HV_Gesamte_verbrauchte_Blindleistung = round(Hausverbrauch.read_float(1024, functioncode=4, number_of_registers=2), 2)
+
+        zeitpunkt=datetime.today().strftime('%Y.%m.%d %H:%M:%S Uhr')
     except:
         print("Etwas ist beim einlesen des Hauszählers schief gelaufen")
         fehler = "ja"
@@ -194,6 +199,8 @@ while(1):
         client.publish("zaehler/Hauszaehler/WirkleisungGesamt", HV_Gesamte_verbrauchte_Wirkleistung)
         client.publish("zaehler/Hauszaehler/BlindleistungGesamt", HV_Gesamte_verbrauchte_Blindleistung)
 
+        client.publish("zaehler/Hauszaehler/Auslesezeitpunkt", zeitpunkt)
+
     except:
         print("Irgendwas ist beim publizieren der Hausverbrauchsdaten schief gelaufen")
         fehler = "ja"
@@ -233,4 +240,6 @@ while(1):
         fehler = "ja"
 
     client.publish("zaehler/Fehler", fehler)
+    print("Fehler?   " + fehler)
+    print("------------------------")
     time.sleep(10)
