@@ -4,14 +4,19 @@ import time
 import minimalmodbus
 import paho.mqtt.client as mqtt
 from datetime import datetime
+import logging
+
 
 durchlaufzaehler = 0
 fehler = "nein"
+
+logging.basicConfig(filename='Error.log', level=logging.DEBUG, format='%(asctime)s %(message)s', datefmt='%Y/%m/%d %H:%M:%S')
 
 # Konfiguration MQTT
 broker_address = "192.168.1.167"
 client = mqtt.Client("Garagenzaehlerauslesecleint")  # create new instance
 client.connect(broker_address)  # connect to broker
+client.on_disconnect = on_disconnect
 
 # Konfiguration der Zähler Haus
 Hausverbrauch = minimalmodbus.Instrument('/dev/ttyUSB0', 2)
@@ -31,6 +36,24 @@ Wallbox.serial.stopbits = 1
 Wallbox.serial.timeout = 1
 Wallbox.mode = minimalmodbus.MODE_RTU
 
+logging.debug("Programm Zählerauslesen wurde gestartet")
+
+
+def on_disconnect(client, userdata, rc):
+   print("Client Got Disconnected")
+   if rc != 0:
+       print('Unexpected MQTT disconnection. Will auto-reconnect')
+
+   else:
+       print('rc value:' + str(rc))
+
+   try:
+       print("Trying to Reconnect")
+       client.connect(broker_address)
+   except:
+       logging.exception("Fehler beim reconnecten mit Broker")
+       print("Error in Retrying to Connect with Broker")
+       
 
 
 # Auslesen der Zähler (HV=Hausverbrauch)
@@ -68,6 +91,7 @@ while(1):
 
         zeitpunkt=datetime.today().strftime('%Y.%m.%d %H:%M:%S Uhr')
     except:
+        logging.exception("Fehler beim Auslesen des Hauszaehlers")
         print("Etwas ist beim einlesen des Hauszählers schief gelaufen")
         fehler = "ja"
 
@@ -104,6 +128,7 @@ while(1):
         WB_Gesamte_verbrauchte_Wirkleistung = round(Wallbox.read_float(256, functioncode=4, number_of_registers=2), 2)
         WB_Gesamte_verbrauchte_Blindleistung = round(Wallbox.read_float(1024, functioncode=4, number_of_registers=2), 2)
     except:
+        logging.exception("Fehler beim Auslesen des Wallboxzaehlers")
         print("Irgendwas ist beim Auslesen des Wallboxzählers schief gelaufen")
         fehler = "ja"
 
@@ -135,6 +160,7 @@ while(1):
         print(str(HV_Gesamte_verbrauchte_Blindleistung) + "kWh Gesamte Verbrauchte Blind -Wh\n")
         print(str(HV_Gesamte_verbrauchte_Wirkleistung) + "kWh Gesamte Verbrauchte kWh\n")
     except:
+        logging.exception("Fehler beim printen der Haus-Daten")
         print("Irgendwas ist beim Ausgeben der Hausdaten schief gelaufen/n")
         fehler = "ja"
 
@@ -167,6 +193,7 @@ while(1):
         durchlaufzaehler = durchlaufzaehler+1
         print(str(durchlaufzaehler) + "mal Durchgelaufen")
     except:
+        logging.exception("Fehler beim printen der Wallbox-Daten")
         print("Irgendwas ist beim Ausgeben der Wallboxdaten schief gelaufen")
         fehler = "ja"
 
@@ -202,6 +229,7 @@ while(1):
         client.publish("zaehler/Hauszaehler/Auslesezeitpunkt", zeitpunkt)
 
     except:
+        logging.exception("Fehler beim puplishen der MQTT Haus-Daten")
         print("Irgendwas ist beim publizieren der Hausverbrauchsdaten schief gelaufen")
         fehler = "ja"
 
@@ -236,6 +264,7 @@ while(1):
         client.publish("zaehler/Wallboxzaehler/BlindleistungGesamt", WB_Gesamte_verbrauchte_Blindleistung)
 
     except:
+        logging.exception("Fehler beim puplishen der MQTT WB-Daten")
         print("Irgendwas ist beim publizieren der Wallboxdaten schief gelaufen")
         fehler = "ja"
 
