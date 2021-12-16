@@ -9,14 +9,45 @@ import logging
 
 durchlaufzaehler = 0
 fehler = "nein"
+verbunden = 0
 
 logging.basicConfig(filename='Error.log', level=logging.DEBUG, format='%(asctime)s %(message)s', datefmt='%Y/%m/%d %H:%M:%S')
+
+def on_disconnect(client, userdata, rc):
+    global verbunden
+    print("Client Got Disconnected")
+    if rc != 0:
+        print('Unexpected MQTT disconnection. Will auto-reconnect')
+
+    else:
+        print('rc value:' + str(rc))
+
+    try:
+        print("Trying to Reconnect")
+        client.connect(broker_address)
+        verbunden = 1
+    except:
+        logging.exception("Fehler beim reconnecten mit Broker")
+        print("Error in Retrying to Connect with Broker")
+        verbunden = 0
+
+def on_connect(client, userdata, flags, rc):
+        global verbunden
+        if rc == 0:
+            print("Connected to MQTT Broker!")
+            verbunden = 1
+        else:
+            print("Failed to connect, return code %d\n", rc)
+
+
+
 
 # Konfiguration MQTT
 broker_address = "192.168.1.167"
 client = mqtt.Client("Garagenzaehlerauslesecleint")  # create new instance
-client.connect(broker_address)  # connect to broker
 client.on_disconnect = on_disconnect
+client.on_connect = on_connect
+client.connect(broker_address)  # connect to broker
 
 # Konfiguration der Zähler Haus
 Hausverbrauch = minimalmodbus.Instrument('/dev/ttyUSB0', 2)
@@ -38,30 +69,18 @@ Wallbox.mode = minimalmodbus.MODE_RTU
 
 logging.debug("Programm Zählerauslesen wurde gestartet")
 
-
-def on_disconnect(client, userdata, rc):
-   print("Client Got Disconnected")
-   if rc != 0:
-       print('Unexpected MQTT disconnection. Will auto-reconnect')
-
-   else:
-       print('rc value:' + str(rc))
-
-   try:
-       print("Trying to Reconnect")
-       client.connect(broker_address)
-   except:
-       logging.exception("Fehler beim reconnecten mit Broker")
-       print("Error in Retrying to Connect with Broker")
-       
-
-
+client.loop_start()
+time.sleep(5)
 # Auslesen der Zähler (HV=Hausverbrauch)
 
 while(1):
 
-
     try:
+        if verbunden == 0:
+            on_disconnect
+        else:
+            print("MQTT ist Verbunden")
+
         HV_A_Phase_Spannung = round(Hausverbrauch.read_float(0, functioncode=4, number_of_registers=2), 2)
         HV_B_Phase_Spannung = round(Hausverbrauch.read_float(2, functioncode=4, number_of_registers=2), 2)
         HV_C_Phase_Spannung = round(Hausverbrauch.read_float(4, functioncode=4, number_of_registers=2), 2)
