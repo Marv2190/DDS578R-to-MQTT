@@ -74,7 +74,7 @@ time.sleep(5)
 # Auslesen der Zähler (HV=Hausverbrauch)
 
 while(1):
-
+    fehler = "nein"
     try:
         if verbunden == 0:
             on_disconnect
@@ -232,9 +232,9 @@ while(1):
         client.publish("zaehler/Hauszaehler/AktuelleWirkleistungPhase3", HV_C_Phase_Wirkleistung)
 
         client.publish("zaehler/Hauszaehler/AktuelleBlindleistungGesamt", HV_KompletteBlindleistung)
-        client.publish("zaehler/Hauszaehler/AktuelleWirkleistungPhase1", HV_A_Phase_Blindleistung)
-        client.publish("zaehler/Hauszaehler/AktuelleWirkleistungPhase2", HV_B_Phase_Blindleistung)
-        client.publish("zaehler/Hauszaehler/AktuelleWirkleistungPhase3", HV_C_Phase_Blindleistung)
+        client.publish("zaehler/Hauszaehler/AktuelleBlindleistungPhase1", HV_A_Phase_Blindleistung)
+        client.publish("zaehler/Hauszaehler/AktuelleBlindleistungPhase2", HV_B_Phase_Blindleistung)
+        client.publish("zaehler/Hauszaehler/AktuelleBlindleistungPhase3", HV_C_Phase_Blindleistung)
 
         client.publish("zaehler/Hauszaehler/Leistungsfaktor1", HV_A_Phase_Leistungsfaktor)
         client.publish("zaehler/Hauszaehler/Leistungsfaktor2", HV_B_Phase_Leistungsfaktor)
@@ -269,9 +269,9 @@ while(1):
         client.publish("zaehler/Wallboxzaehler/AktuelleWirkleistungPhase3", WB_C_Phase_Wirkleistung)
 
         client.publish("zaehler/Wallboxzaehler/AktuelleBlindleistungGesamt", WB_KompletteBlindleistung)
-        client.publish("zaehler/Wallboxzaehler/AktuelleWirkleistungPhase1", WB_A_Phase_Blindleistung)
-        client.publish("zaehler/Wallboxzaehler/AktuelleWirkleistungPhase2", WB_B_Phase_Blindleistung)
-        client.publish("zaehler/Wallboxzaehler/AktuelleWirkleistungPhase3", WB_C_Phase_Blindleistung)
+        client.publish("zaehler/Wallboxzaehler/AktuelleBlindleistungPhase1", WB_A_Phase_Blindleistung)
+        client.publish("zaehler/Wallboxzaehler/AktuelleBlindleistungPhase2", WB_B_Phase_Blindleistung)
+        client.publish("zaehler/Wallboxzaehler/AktuelleBlindleistungPhase3", WB_C_Phase_Blindleistung)
 
         client.publish("zaehler/Wallboxzaehler/Leistungsfaktor1", WB_A_Phase_Leistungsfaktor)
         client.publish("zaehler/Wallboxzaehler/Leistungsfaktor2", WB_B_Phase_Leistungsfaktor)
